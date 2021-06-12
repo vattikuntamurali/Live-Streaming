@@ -1,0 +1,29 @@
+import socket
+import cv2 
+import pickle
+import struct
+s = socket.socket()
+serverhost = "192.168.1.113"
+serverport = 2021
+s.connect( (serverhost,serverport) )
+print("Socket is successfully created")
+cam = cv2.VideoCapture(0)
+img_counter = 0
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+while True:
+    ret,frame = cam.read()
+    
+    result, frame = cv2.imencode('.jpg', frame, encode_param)
+    data = pickle.dumps(frame, 0)
+    size = len(data)
+    
+    print("{}: {}".format(img_counter, size))
+    s.sendall(struct.pack(">L", size) + data)
+    img_counter += 1
+    frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+    cv2.imshow('Client',frame)
+    if cv2.waitKey(1) & 0xFF==ord('q'):
+        cv2.destroyAllWindows()
+        cam.release()
+        break
+cam.release()
